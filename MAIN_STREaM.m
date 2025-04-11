@@ -27,26 +27,26 @@ param.HHsize = 2; % This parameter should be in the interval (1,6).
 % 0 = not present
 % 1 = present
 
-param.appliances.StToilet = 1;
-param.appliances.HEToilet = 0;
+param.appliances.StToilet = 0;
+param.appliances.HEToilet = 1;
 
-param.appliances.StShower = 1;
-param.appliances.HEShower = 0;
+param.appliances.StShower = 0;
+param.appliances.HEShower = 1;
 
-param.appliances.StFaucet = 1;
-param.appliances.HEFaucet = 0;
+param.appliances.StFaucet = 0;
+param.appliances.HEFaucet = 1;
 
-param.appliances.StClothesWasher = 1;
-param.appliances.HEClothesWasher = 0;
+param.appliances.StClothesWasher = 0;
+param.appliances.HEClothesWasher = 1;
 
-param.appliances.StDishwasher = 1;
-param.appliances.HEDishwasher = 0;
+param.appliances.StDishwasher = 0;
+param.appliances.HEDishwasher = 1;
 
-param.appliances.StBathtub = 1;
-param.appliances.HEBathtub = 0;
+param.appliances.StBathtub = 0;
+param.appliances.HEBathtub = 1;
 
 % --- C. Time horizon length setting
-param.H = 365; % It is measured in [days]
+param.H = 1; % It is measured in [days]
 
 % --- D. Time sampling resolution
 param.ts = 1; % It is measured in [10 seconds] units. The maximum resolution allowed is 10 seconds (param.ts = 1).
@@ -63,6 +63,7 @@ clearvars -except param
 homeFolder = pwd;
 addpath([homeFolder '/_DATA']); % Path to the folder where the database.mat file is stored
 load database.mat
+load pyniwm_features.mat
 
 %% ::: WATER END-USE TIME SERIES GENERATION :::
 
@@ -70,7 +71,7 @@ load database.mat
 outputTrajectory = initializeTrajectories(param);
 
 % End-use water use time series generation
-outputTrajectory = generateConsumptionEvents(outputTrajectory, param, database);
+[outputTrajectory, statistics] = generateConsumptionEvents(outputTrajectory, param, database, features);
 disp('End-use consumption trajectories created');
 
 % Total water use time series aggregation
@@ -78,8 +79,11 @@ outputTrajectory = sumToTotal(outputTrajectory);
 disp('Total consumption trajectory created');
 
 % Data scaling to desired sampling resolution
-outputTrajectory = aggregateSamplingResolution(outputTrajectory, param);
-disp('Data scaled to desired sampling resolution');
+% outputTrajectory = aggregateSamplingResolution(outputTrajectory, param);
+% disp('Data scaled to desired sampling resolution');
 
 % Saving
-save outputTrajectory.mat outputTrajectory
+% save outputTrajectory.mat outputTrajectory
+outputTrajectoryTable = struct2table(outputTrajectory);
+writetable(outputTrajectoryTable,'./_DATA/outputTrajectory.csv')
+writetable(statistics,'./_DATA/statistics.csv')

@@ -4,7 +4,7 @@ function outputTrajectory = sumToTotal(outputTrajectory)
 
 names=fieldnames(outputTrajectory);
 
-for i=1:length(names)
+for i=2:length(names)
     if strcmp(names(i), 'TOTAL') ==1
     else
         outputTrajectory.TOTAL = outputTrajectory.TOTAL + outputTrajectory.(names{i});
