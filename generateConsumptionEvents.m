@@ -109,7 +109,7 @@ for currApp = 1:length(appNames) % For each appliance
                     end
 
                     randFeat = randi(height(features.(featName)));
-                    duration10s(eventID) = features.(featName).Duration(randFeat) / 10; % Duration in 10 seconds
+                    duration10s(eventID) = round(features.(featName).Duration(randFeat) / 10); % Duration in 10 seconds
                     volumes(eventID) = features.(featName).Volume(randFeat);
 
                     event = event(2:end-1);
