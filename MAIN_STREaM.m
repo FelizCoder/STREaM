@@ -52,7 +52,7 @@ param.H = 1; % It is measured in [days]
 param.ts = 1; % It is measured in [10 seconds] units. The maximum resolution allowed is 10 seconds (param.ts = 1).
 
 % Setting the seed
-rng(1);
+% rng(1);
 
 % Parameters structure settings and check
 % Checking input consistency
