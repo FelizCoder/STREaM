@@ -15,7 +15,7 @@ HHsize = param.HHsize;
 % Other parameters
 second10Day = 24*360; % Number of 10-second units in a day
 
-statistics = array2table(zeros(0,4),'VariableNames', {'Label', 'Duration', 'Volume', 'EventStartTime'});
+statistics = array2table(zeros(0,9),'VariableNames', {'Label', 'Duration', 'Volume', 'Peak', 'Mean', 'Hour', 'EventStartTime', 'EventStartIdx', 'EventEndIdx'});
 
 
 for currApp = 1:length(appNames) % For each appliance
@@ -40,7 +40,7 @@ for currApp = 1:length(appNames) % For each appliance
                 end
 
                 % -- Step 2: Duration and Volume
-                durations = zeros(1,numEvents);
+                duration10s = zeros(1,numEvents);
                 volumes = zeros(1,numEvents);
                 timeStart = zeros(1,numEvents);
 
@@ -75,22 +75,29 @@ for currApp = 1:length(appNames) % For each appliance
                             randSig = randi(length(signatures.StandardFaucet));
                             featName = "Faucet";
                             event = signatures.StandardFaucet{1, randSig};
+                        % Dishwasher and Clothes Washer of PyNIWM Dataset
+                        % are not measured a single Event. Each on / off cycle
+                        % is considered a single event. This is not the case
+                        % for the signatures in STREaM. Therefore, we use the
+                        % StandardToilet signature for the Clothes Washer and
+                        % Dishwasher appliances. Wich is better suited for this case
+                        % TODO: This breaks the logic of number of events per day
                         case 'StClothesWasher'
                             randSig = randi(length(signatures.StandardClothesWasher));
                             featName = "Clotheswasher";
-                            event = signatures.StandardClothesWasher{1, randSig};
+                            event = signatures.StandardToilet{1, randSig};
                         case 'HEClothesWasher'
                             randSig = randi(length(signatures.EfficientClothesWasher));
                             featName = "Clotheswasher";
-                            event = signatures.EfficientClothesWasher{1, randSig};
+                            event = signatures.StandardToilet{1, randSig};
                         case 'StDishwasher'
                             randSig = randi(length(signatures.StandardDishwasher));
                             featName = "Dishwasher";
-                            event = signatures.StandardDishwasher{1, randSig};
+                            event = signatures.StandardToilet{1, randSig};
                         case 'HEDishwasher'
                             randSig = randi(length(signatures.StandardDishwasher));
                             featName = "Dishwasher";
-                            event = signatures.StandardDishwasher{1, randSig};
+                            event = signatures.StandardToilet{1, randSig};
                         case 'StBathtub'
                             randSig = randi(length(signatures.Bathtub));
                             featName = "Bathtub";
@@ -102,20 +109,20 @@ for currApp = 1:length(appNames) % For each appliance
                     end
 
                     randFeat = randi(height(features.(featName)));
-                    durations(eventID) = features.(featName).Duration(randFeat);
+                    duration10s(eventID) = features.(featName).Duration(randFeat) / 10; % Duration in 10 seconds
                     volumes(eventID) = features.(featName).Volume(randFeat);
 
                     event = event(2:end-1);
 
                     posPositions = find(event>0);
                     % Resizing signature length
-                    while length(posPositions) > durations(eventID)
+                    while length(posPositions) > duration10s(eventID)
                         position=randi(length(posPositions),1);
                         event(posPositions(position)) = [];
                         posPositions = find(event>0);
                     end
 
-                    while length(posPositions) < durations(eventID)
+                    while length(posPositions) < duration10s(eventID)
                         position=randi(length(posPositions),1);
                         event = [event(1:posPositions(position)), event(posPositions(position):end)];
                         posPositions = find(event>0);
@@ -139,6 +146,9 @@ for currApp = 1:length(appNames) % For each appliance
                         disp('error');
                     end
 
+                    % Scale event to L/min
+                    event = event * 6;
+
                     % Placing event in time series
                     startIDX = max(min((dayID-1)*second10Day + timeStart(eventID), length(outputTrajectory.(featName))),1);
                     endIDX = max(min((dayID-1)*second10Day + timeStart(eventID) + length(event) -1, length(outputTrajectory.(featName))),1);
@@ -148,9 +158,14 @@ for currApp = 1:length(appNames) % For each appliance
 
                     % Updating statistics
                     newRow.Label = featName;
-                    newRow.Duration = durations(eventID);
+                    newRow.Duration = duration10s(eventID) * 10; % Duration in seconds
                     newRow.Volume = volumes(eventID);
+                    newRow.Peak = max(event);
+                    newRow.Mean = mean(event);
                     newRow.EventStartTime = outputTrajectory.Time(startIDX);
+                    newRow.EventStartIdx = startIDX;
+                    newRow.EventEndIdx = endIDX;
+                    newRow.Hour = hours(outputTrajectory.Time(startIDX));
                     statistics = [statistics; struct2table(newRow)];
 
                 end
