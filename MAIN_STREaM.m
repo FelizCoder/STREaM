@@ -57,7 +57,7 @@ rng(1);
 % Parameters structure settings and check
 % Checking input consistency
 temp=checkInput(param);
-clearvars -except param
+% clearvars -except param
 
 %% ::: LOADING COMPLETE DATABASE :::
 homeFolder = pwd;
@@ -72,11 +72,11 @@ outputTrajectory = initializeTrajectories(param);
 
 % End-use water use time series generation
 [outputTrajectory, statistics] = generateConsumptionEvents(outputTrajectory, param, database, features);
-disp('End-use consumption trajectories created');
+% disp('End-use consumption trajectories created');
 
 % Total water use time series aggregation
 outputTrajectory = sumToTotal(outputTrajectory);
-disp('Total consumption trajectory created');
+% disp('Total consumption trajectory created');
 
 % Data scaling to desired sampling resolution
 % outputTrajectory = aggregateSamplingResolution(outputTrajectory, param);
@@ -84,6 +84,6 @@ disp('Total consumption trajectory created');
 
 % Saving
 % save outputTrajectory.mat outputTrajectory
-outputTrajectoryTable = struct2table(outputTrajectory);
-writetable(outputTrajectoryTable,'./_DATA/outputTrajectory.csv')
-writetable(statistics,'./_DATA/statistics.csv')
+% outputTrajectoryTable = struct2table(outputTrajectory);
+% writetable(outputTrajectoryTable,'./_DATA/outputTrajectory.csv')
+% writetable(statistics,'./_DATA/statistics.csv')

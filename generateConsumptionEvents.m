@@ -20,7 +20,7 @@ statistics = array2table(zeros(0,9),'VariableNames', {'Label', 'Duration', 'Volu
 
 for currApp = 1:length(appNames) % For each appliance
     currentAppName = appNames{currApp};
-    disp([' Generating data for ' currentAppName]);
+    % disp([' Generating data for ' currentAppName]);
     currentAppActive = param.appliances.(currentAppName);
 
 
