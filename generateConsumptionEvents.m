@@ -45,123 +45,29 @@ for currApp = 1:length(appNames) % For each appliance
                 timeStart = zeros(1,numEvents);
 
                 for eventID = 1:numEvents
-                    % --- Step 3: Time of day
-                    tempTimeStart = datevec(random(database.UseProbabilities.(currentAppName).EventStartTime{1,HHsize}{1,1}));
-                    timeStart(eventID) = 360*tempTimeStart(4) + 6*tempTimeStart(5) + round(tempTimeStart(6)/10); % Event start index (10 second resolution)
 
-                    % --- Step 4: assign Duration, Volume and Signature
-                    switch currentAppName
-                        case 'StToilet'
-                            randSig = randi(length(signatures.StandardToilet));
-                            featName = "Toilet";
-                            event = signatures.StandardToilet{1, randSig};
-                        case 'HEToilet'
-                            randSig = randi(length(signatures.EfficientToilet));
-                            featName = "Toilet";
-                            event = signatures.EfficientToilet{1, randSig};
-                        case 'StShower'
-                            randSig = randi(length(signatures.StandardShower));
-                            featName = "Shower";
-                            event = signatures.StandardShower{1, randSig};
-                        case 'HEShower'
-                            randSig = randi(length(signatures.StandardShower));
-                            featName = "Shower";
-                            event = signatures.StandardShower{1, randSig};
-                        case 'StFaucet'
-                            randSig = randi(length(signatures.StandardFaucet));
-                            featName = "Faucet";
-                            event = signatures.StandardFaucet{1, randSig};
-                        case 'HEFaucet'
-                            randSig = randi(length(signatures.StandardFaucet));
-                            featName = "Faucet";
-                            event = signatures.StandardFaucet{1, randSig};
-                        % Dishwasher and Clothes Washer of PyNIWM Dataset
-                        % are not measured a single Event. Each on / off cycle
-                        % is considered a single event. This is not the case
-                        % for the signatures in STREaM. Therefore, we use the
-                        % StandardToilet signature for the Clothes Washer and
-                        % Dishwasher appliances. Wich is better suited for this case
-                        % TODO: This breaks the logic of number of events per day
-                        case 'StClothesWasher'
-                            randSig = randi(length(signatures.StandardClothesWasher));
-                            featName = "Clotheswasher";
-                            event = signatures.StandardToilet{1, randSig};
-                        case 'HEClothesWasher'
-                            randSig = randi(length(signatures.EfficientClothesWasher));
-                            featName = "Clotheswasher";
-                            event = signatures.StandardToilet{1, randSig};
-                        case 'StDishwasher'
-                            randSig = randi(length(signatures.StandardDishwasher));
-                            featName = "Dishwasher";
-                            event = signatures.StandardToilet{1, randSig};
-                        case 'HEDishwasher'
-                            randSig = randi(length(signatures.StandardDishwasher));
-                            featName = "Dishwasher";
-                            event = signatures.StandardToilet{1, randSig};
-                        case 'StBathtub'
-                            randSig = randi(length(signatures.Bathtub));
-                            featName = "Bathtub";
-                            event = signatures.Bathtub{1, randSig};
-                        case 'HEBathtub'
-                            randSig = randi(length(signatures.Bathtub));
-                            featName = "Bathtub";
-                            event = signatures.Bathtub{1, randSig};
-                    end
+                    % --- Step 3: assign Duration, Volume and Signature
+                    [event, featName] = getEventFeatures(currentAppName, signatures, features, database, HHsize);
+                    duration10s(eventID) = event.duration10s;
+                    volumes(eventID) = event.volume;
+                    timeStart(eventID) = event.timeStart;
 
-                    randFeat = randi(height(features.(featName)));
-                    duration10s(eventID) = round(features.(featName).Duration(randFeat) / 10); % Duration in 10 seconds
-                    volumes(eventID) = features.(featName).Volume(randFeat);
-
-                    event = event(2:end-1);
-
-                    posPositions = find(event>0);
-                    % Resizing signature length
-                    while length(posPositions) > duration10s(eventID)
-                        position=randi(length(posPositions),1);
-                        event(posPositions(position)) = [];
-                        posPositions = find(event>0);
-                    end
-
-                    while length(posPositions) < duration10s(eventID)
-                        position=randi(length(posPositions),1);
-                        event = [event(1:posPositions(position)), event(posPositions(position):end)];
-                        posPositions = find(event>0);
-                    end
-
-                    % Resizing signature volume
-                    eventVolume = sum(event);
-
-                    volumeDifference = eventVolume - volumes(eventID);
-
-                    if volumeDifference > 0 % Signature should be lowered
-                        coeffProp = event./eventVolume;
-                        coeffProp(isnan(coeffProp)) = 0;
-                    else % Signature should be increased
-                        coeffProp = (event>0)/length(posPositions);
-                        coeffProp(isnan(coeffProp)) = 0;
-                    end
-
-                    event = event - volumeDifference.*coeffProp;
-                    if sum((event<0))> 0
-                        disp('error');
-                    end
-
-                    % Scale event to L/min
-                    event = event * 6;
+                    % --- Step 4: scale Signature 
+                    trajectory = adjustEventTrajectory(event);
 
                     % Placing event in time series
                     startIDX = max(min((dayID-1)*second10Day + timeStart(eventID), length(outputTrajectory.(featName))),1);
-                    endIDX = max(min((dayID-1)*second10Day + timeStart(eventID) + length(event) -1, length(outputTrajectory.(featName))),1);
-                    event = event(1:endIDX - startIDX +1);
+                    endIDX = max(min((dayID-1)*second10Day + timeStart(eventID) + length(trajectory) -1, length(outputTrajectory.(featName))),1);
+                    trajectory = trajectory(1:endIDX - startIDX +1);
                     outputTrajectory.(featName)(startIDX : endIDX) = ...
-                        outputTrajectory.(featName)(startIDX : endIDX) + event';
+                        outputTrajectory.(featName)(startIDX : endIDX) + trajectory';
 
                     % Updating statistics
                     newRow.Label = featName;
-                    newRow.Duration = duration10s(eventID) * 10; % Duration in seconds
-                    newRow.Volume = volumes(eventID);
-                    newRow.Peak = max(event);
-                    newRow.Mean = mean(event);
+                    newRow.Duration = event.duration10s * 10; % Duration in seconds
+                    newRow.Volume = event.volume; % Volume in liters
+                    newRow.Peak = max(trajectory);
+                    newRow.Mean = mean(trajectory);
                     newRow.EventStartTime = outputTrajectory.Time(startIDX);
                     newRow.EventStartIdx = startIDX;
                     newRow.EventEndIdx = endIDX;
