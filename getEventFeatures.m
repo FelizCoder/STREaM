@@ -13,7 +13,8 @@ function [event, featName] = getEventFeatures(currentAppName, signatures, featur
     %   featName - string, name of the feature category
     
     tempTimeStart = datevec(random(database.UseProbabilities.(currentAppName).EventStartTime{1,HHsize}{1,1}));
-    event.timeStart = 360*tempTimeStart(4) + 6*tempTimeStart(5) + round(tempTimeStart(6)/10); % Event start index (10 second resolution)
+    event.timeStartTS = duration(tempTimeStart(4:6));
+    event.timeStartIdx = 360*tempTimeStart(4) + 6*tempTimeStart(5) + round(tempTimeStart(6)/10); % Event start index (10 second resolution)
 
 
     switch currentAppName

@@ -50,7 +50,7 @@ for currApp = 1:length(appNames) % For each appliance
                     [event, featName] = getEventFeatures(currentAppName, signatures, features, database, HHsize);
                     duration10s(eventID) = event.duration10s;
                     volumes(eventID) = event.volume;
-                    timeStart(eventID) = event.timeStart;
+                    timeStart(eventID) = event.timeStartIdx;
 
                     % --- Step 4: scale Signature 
                     trajectory = adjustEventTrajectory(event);

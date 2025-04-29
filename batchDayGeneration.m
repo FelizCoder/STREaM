@@ -1,9 +1,9 @@
 outputFolder = './output/';
-nHouses = 1000; % Number of days to simulate
+nDays = 2; % Number of days to simulate
 
 pb = CmdLineProgressBar('Generating data...');
-for i = 1:nHouses
-    pb.print(i, nHouses);
+for i = 1:nDays
+    pb.print(i, nDays);
     MAIN_STREaM
     outputTrajectoryTable = struct2table(outputTrajectory);
     writetable(outputTrajectoryTable, sprintf('%sHouse_%d_10s_trajectory.csv', outputFolder, i))
