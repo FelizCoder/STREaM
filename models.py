@@ -23,7 +23,7 @@ class EndUseType(str, Enum):
     SHOWER = "Shower"
     TOILET = "Toilet"
     FAUCET = "Faucet"
-    CLOTHES_WASHER = "Clotheswasher"
+    CLOTHES_WASHER = "ClothesWasher"
     DISHWASHER = "Dishwasher"
     BATHTUB = "Bathtub"
     OTHER = "other"
@@ -117,7 +117,7 @@ EndUseValveMapping: dict[str, int] = {
     "Faucet": 0,
     "Toilet": 1,
     "Shower": 2,
-    "Clotheswasher": 3,
+    "ClothesWasher": 3,
     "Dishwasher": 4,
     "Bathtub": 5,
 }

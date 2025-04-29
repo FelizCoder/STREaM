@@ -43,11 +43,11 @@ function [event, featName] = getEventFeatures(currentAppName, signatures, featur
             event.signature = signatures.StandardFaucet{1, randSig};
         case 'StClothesWasher'
             randSig = randi(length(signatures.StandardClothesWasher));
-            featName = "Clotheswasher";
+            featName = "ClothesWasher";
             event.signature = signatures.StandardToilet{1, randSig};
         case 'HEClothesWasher'
             randSig = randi(length(signatures.EfficientClothesWasher));
-            featName = "Clotheswasher";
+            featName = "ClothesWasher";
             event.signature = signatures.StandardToilet{1, randSig};
         case 'StDishwasher'
             randSig = randi(length(signatures.StandardDishwasher));
